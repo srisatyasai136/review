@@ -1,0 +1,48 @@
+{% extends "reviews/base.html" %}
+
+{% block title %}Submit Feedback{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title">Submit Feedback</h2>
+<p class="page-subtitle">
+    Class: <strong>{{ demo_class.title }}</strong> |
+    Mentor: {{ demo_class.trainer.name }}
+</p>
+
+<form method="post" class="feedback-form">
+    {% csrf_token %}
+
+    <div class="form-row">
+        <label class="form-label">Rating (1 to 5)</label>
+        <select name="rating" class="form-control" required>
+            <option value="">Select rating</option>
+            {% for i in "12345" %}
+                <option value="{{ i }}" {% if form.rating.value == i %}selected{% endif %}>{{ i }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-row">
+        <label class="form-label">What did you like most?</label>
+        <textarea name="liked_most" class="form-control" placeholder="Your feedback..." required></textarea>
+    </div>
+
+    <div class="form-row">
+        <label class="form-label">What could be improved?</label>
+        <textarea name="to_improve" class="form-control" placeholder="Your suggestions..." required></textarea>
+    </div>
+
+    <div class="form-row checkbox-row">
+        <label class="checkbox-label">
+            <input type="checkbox" name="would_recommend" class="checkbox-input">
+            <span>Would recommend this class</span>
+        </label>
+    </div>
+
+    <button type="submit" class="btn-primary-gradient">
+        Submit Feedback
+    </button>
+</form>
+
+{% endblock %}

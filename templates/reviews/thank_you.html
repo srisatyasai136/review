@@ -1,0 +1,10 @@
+{% extends 'reviews/base.html' %}
+{% block title %}Thank you{% endblock %}
+
+{% block content %}
+<div class="text-center mt-5">
+    <h1>Thank you!</h1>
+    <p class="lead">Your feedback for "{{ demo_class.title }}" has been recorded.</p>
+    <!-- <a href="{% url 'demo_class_list' %}" >Back to class list</a> -->
+</div>
+{% endblock %}

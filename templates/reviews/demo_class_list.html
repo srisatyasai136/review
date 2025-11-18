@@ -1,0 +1,36 @@
+{% extends 'reviews/base.html' %}
+{% block title %}Class Details{% endblock %}
+
+{% block content %}
+<h2 class="page-title">Class Details &amp; Statistics</h2>
+<p class="page-subtitle">Choose your demo class to submit feedback.</p>
+
+{% if classes %}
+    {% for c in classes %}
+    <a href="{% url 'submit_feedback' c.id %}" style="text-decoration:none;">
+        <div class="item-card">
+            <div class="item-header">
+                <div>
+                    <div class="item-title">{{ c.title }}</div>
+                    <div class="item-subtitle">Feedback session for {{ c.trainer.name }}</div>
+                </div>
+            </div>
+
+            <div class="item-meta-row">
+                <div>
+                    <div class="meta-value">Mentor : {{ c.trainer.name }}</div>
+                </div>
+                <div>
+                    <div class="meta-value">Date &amp; Time : {{ c.date|date:"d M Y, H:i" }}</div>
+                </div>
+                <div>
+                    <div class="meta-value">Duration : {{ c.duration_minutes }} min</div>
+                </div>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+    <p class="page-subtitle">No active demo classes right now.</p>
+{% endif %}
+{% endblock %}

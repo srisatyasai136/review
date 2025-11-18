@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+
+<div class="form-container">
+    <p class="title">Verify-OTP</p>
+
+    <form class="form" method="post" onsubmit="return showLoader(this)">
+        {% csrf_token %}
+
+        <div class="input-group">
+            <label>
+            <p class="signup" style="margin-bottom: 12px;">
+        OTP sent to <strong>{{ email }}</strong>
+    </p></label>
+            <!-- <input type="email" name="email" id="email" placeholder="Enter your email" required> -->
+             <input 
+    type="text" 
+    class="otp-input" 
+    id="otp-input" 
+    name="otp"
+    maxlength="6" 
+    required
+    inputmode="numeric"
+    pattern="[0-9]{6}"
+>
+
+        </div>
+        <br>
+
+        <!-- <button id="submitBtn" type="submit" class="sign">Login</button> -->
+         <button type="submit" class="sign" id="submitBtn">
+    <span class="btn-text">Verify</span>
+    <div class="loading" style="display: none;">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+</button>
+
+    </form>
+
+    <p class="signup">
+    Didn't receive OTP?
+    <a href="{% url 'resend_otp' %}">Resend OTP</a>
+</p>
+
+    <div class="error-box">
+    {% if messages %}
+        {% for message in messages %}
+        <p class="error-text">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+</div>
+
+
+</div>
+<script src="{% static 'js/login.js' %}"></script>
+
+
+</body>
+</html>

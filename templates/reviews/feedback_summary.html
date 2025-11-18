@@ -1,0 +1,56 @@
+{% extends 'reviews/base.html' %}
+{% block title %}Class Summary{% endblock %}
+
+{% block content %}
+<h2 class="page-title">Class Details &amp; Statistics</h2>
+<p class="page-subtitle">Overview of all demo classes and their feedback.</p>
+
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-label">Total Feedback</div>
+        <div class="stat-value">{{ overall.total_feedback|default:0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Average Rating</div>
+        <div class="stat-value">
+            {{ overall.avg_rating|floatformat:2|default:"N/A" }}
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Active Classes</div>
+        <div class="stat-value">{{ per_class|length }}</div>
+    </div>
+</div>
+
+<div style="margin-top:24px;">
+    {% for c in per_class %}
+    <div class="item-card">
+        <div class="item-header">
+            <div>
+                <div class="item-title">{{ c.title }}</div>
+                <div class="item-subtitle">
+                    Feedback session for {{ c.trainer.name }}
+                </div>
+            </div>
+            <span class="rating-pill">
+                {% if c.avg_rating %}{{ c.avg_rating|floatformat:1 }}/5{% else %}-{% endif %}
+            </span>
+        </div>
+
+        <div class="item-meta-row">
+            <div>
+                <div class="meta-value">Mentor : {{ c.trainer.name }}</div>
+            </div>
+            <div>
+                <div class="meta-value">Date : {{ c.date|date:"d M Y, H:i" }}</div>
+            </div>
+            <div>
+                <div class="meta-value">Feedback Count : {{ c.feedback_count }}</div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p class="page-subtitle">No classes found.</p>
+    {% endfor %}
+</div>
+{% endblock %}

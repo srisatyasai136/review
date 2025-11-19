@@ -18,29 +18,59 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------
-# Helper: Send email via SendGrid API
+# Helper: Send email via SendGrid API (HTML + plain-text fallback)
 # ---------------------------
 def send_otp_email(to_email: str, otp: str, subject: str = "Your verification OTP") -> bool:
     """
-    Send a plain-text OTP email using SendGrid Web API.
-    Returns True on success, False on error (errors are logged).
+    Send an OTP email using SendGrid Web API with HTML content and a plain-text fallback.
+    Returns True on success (202 or 200), False on error (errors are logged).
     """
     from_email = os.getenv("FROM_EMAIL", "noreply@yourdomain.com")
-    body = f"Your OTP code is: {otp}\n\nIf you did not request this, please ignore."
+    plain_body = f"Your OTP code is: {otp}\n\nIf you did not request this, please ignore."
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; background:#f7f7fb; padding:24px;">
+      <div style="max-width:520px; margin: auto; background:#ffffff; border-radius:10px; padding:22px; border:1px solid #e6e9ef;">
+        <h2 style="color:#0f172a; margin:0 0 8px;">Email Verification</h2>
+        <p style="color:#475569; margin:0 0 16px;">Use the verification code below to complete your action.</p>
 
-    message = Mail(
-        from_email=from_email,
-        to_emails=to_email,
-        subject=subject,
-        plain_text_content=body,
-    )
+        <div style="display:inline-block; padding:12px 20px; border-radius:8px; background:#f8fafc; border:1px solid #e6eef8; 
+                    font-size:26px; font-weight:700; color:#0f172a; letter-spacing:3px;">
+          {otp}
+        </div>
+
+        <p style="color:#64748b; margin:18px 0 0; font-size:13px;">
+          This code is valid for 10 minutes. If you didn't request this, ignore this email.
+        </p>
+      </div>
+    </div>
+    """
 
     try:
-        sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY", ""))
+        message = Mail(
+            from_email=from_email,
+            to_emails=to_email,
+            subject=subject,
+            plain_text_content=plain_body,
+            html_content=html_content
+        )
+
+        api_key = os.getenv("SENDGRID_API_KEY", "")
+        if not api_key:
+            logger.error("SENDGRID_API_KEY not set in environment.")
+            return False
+
+        sg = SendGridAPIClient(api_key)
         resp = sg.send(message)
-        # Optionally log the response status code for debugging
-        logger.info("SendGrid send: status=%s to=%s", getattr(resp, "status_code", None), to_email)
-        return True
+        status_code = getattr(resp, "status_code", None)
+        logger.info("SendGrid send: status=%s to=%s", status_code, to_email)
+
+        # SendGrid returns 202 for accepted; older clients may return 200
+        if status_code in (200, 202):
+            return True
+
+        logger.error("Unexpected SendGrid status: %s for %s", status_code, to_email)
+        return False
+
     except Exception as exc:
         logger.exception("Failed to send OTP email to %s: %s", to_email, exc)
         return False
@@ -76,10 +106,10 @@ def register_user(request):
         })
 
         # Send OTP via SendGrid API
-        sent = send_otp_email(email, otp_code, subject="Verify Email OTP")
+        sent = send_otp_email(email, otp_code, subject="Verify your email - OTP")
         if not sent:
             messages.error(request, "Failed to send OTP email. Please try again shortly.")
-            # Keep the session values so user can retry resend; redirect to verify page regardless
+            # Keep the session values so user can retry resend; redirect to verify page
             return redirect("verify_otp")
 
         messages.success(request, "OTP sent to your email. Please check and verify.")
@@ -155,7 +185,7 @@ def resend_otp(request):
     else:
         request.session["reset_otp"] = otp_code
 
-    sent = send_otp_email(email, otp_code, subject="Your New OTP")
+    sent = send_otp_email(email, otp_code, subject="Your new OTP")
     if not sent:
         messages.error(request, "Failed to resend OTP. Try again later.")
     else:
@@ -183,7 +213,7 @@ def forgot_password(request):
         request.session["reset_email"] = email
         request.session["reset_otp"] = otp_code
 
-        sent = send_otp_email(email, otp_code, subject="Password Reset OTP")
+        sent = send_otp_email(email, otp_code, subject="Password reset OTP")
         if not sent:
             messages.error(request, "Failed to send reset OTP. Try again later.")
             return redirect("forgot_password")

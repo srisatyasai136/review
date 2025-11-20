@@ -21,26 +21,18 @@ logger = logging.getLogger(__name__)
 # Helper: Send email via SendGrid API (HTML + plain-text fallback)
 # ---------------------------
 def send_otp_email(to_email: str, otp: str, subject: str = "Your verification OTP") -> bool:
-    """
-    Send an OTP email using SendGrid Web API with HTML content and a plain-text fallback.
-    Returns True on success (202 or 200), False on error (errors are logged).
-    """
-    from_email = os.getenv("DEFAULT_FROM_EMAIL", "noreply@yourdomain.com")
-    plain_body = f"Your OTP code is: {otp}\n\nIf you did not request this, please ignore."
-    html_content = f"""
-    <div style="font-family: Arial, sans-serif; background:#f7f7fb; padding:24px;">
-      <div style="max-width:520px; margin: auto; background:#ffffff; border-radius:10px; padding:22px; border:1px solid #e6e9ef;">
-        <h2 style="color:#0f172a; margin:0 0 8px;">Email Verification</h2>
-        <p style="color:#475569; margin:0 0 16px;">Use the verification code below to complete your action.</p>
+    from_email = os.getenv("DEFAULT_FROM_EMAIL", "noreply@example.com")
 
-        <div style="display:inline-block; padding:12px 20px; border-radius:8px; background:#f8fafc; border:1px solid #e6eef8; 
-                    font-size:26px; font-weight:700; color:#0f172a; letter-spacing:3px;">
+    plain_body = f"Your OTP code is: {otp}"
+
+    html_content = f"""
+    <div style="font-family: Arial; background:#f7f7fb; padding:24px;">
+      <div style="max-width:520px; margin:auto; background:white; border-radius:10px; padding:22px;">
+        <h2 style="color:#0f172a;">Email Verification</h2>
+        <p style="color:#475569;">Use the verification code below.</p>
+        <div style="padding:12px 20px; border-radius:8px; background:#f8fafc; font-size:26px; font-weight:700;">
           {otp}
         </div>
-
-        <p style="color:#64748b; margin:18px 0 0; font-size:13px;">
-          This code is valid for 10 minutes. If you didn't request this, ignore this email.
-        </p>
       </div>
     </div>
     """
@@ -49,32 +41,28 @@ def send_otp_email(to_email: str, otp: str, subject: str = "Your verification OT
         message = Mail(
             from_email=from_email,
             to_emails=to_email,
-            # subject=subject,
-            # plain_text_content=plain_body,
+            subject=subject,
+            plain_text_content=plain_body,
             html_content=html_content
         )
 
-        api_key = os.getenv("SENDGRID_API_KEY", "")
+        api_key = os.getenv("SENDGRID_API_KEY")
         if not api_key:
-            logger.error("SENDGRID_API_KEY not set in environment.")
+            logger.error("SENDGRID_API_KEY missing")
             return False
 
         sg = SendGridAPIClient(api_key)
         resp = sg.send(message)
-        status_code = getattr(resp, "status_code", None)
-        logger.info("SendGrid send: status=%s to=%s", status_code, to_email)
 
-        # SendGrid returns 202 for accepted; older clients may return 200
-        if status_code in (200, 202):
+        if resp.status_code in (200, 202):
             return True
 
-        logger.error("Unexpected SendGrid status: %s for %s", status_code, to_email)
+        logger.error("SendGrid unexpected status: %s", resp.status_code)
         return False
 
     except Exception as exc:
-        logger.exception("Failed to send OTP email to %s: %s", to_email, exc)
+        logger.exception("Send OTP failed: %s", exc)
         return False
-
 
 # ---------------------------
 # Register with OTP (stores OTP in session, sends via SendGrid)
@@ -352,4 +340,5 @@ def feedback_summary(request):
         "per_class": per_class,
         "overall": overall,
     })
+
 

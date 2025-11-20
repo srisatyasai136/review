@@ -25,7 +25,7 @@ def send_otp_email(to_email: str, otp: str, subject: str = "Your verification OT
     Send an OTP email using SendGrid Web API with HTML content and a plain-text fallback.
     Returns True on success (202 or 200), False on error (errors are logged).
     """
-    from_email = os.getenv("FROM_EMAIL", "noreply@yourdomain.com")
+    from_email = os.getenv("DEFAULT_FROM_EMAIL", "noreply@yourdomain.com")
     plain_body = f"Your OTP code is: {otp}\n\nIf you did not request this, please ignore."
     html_content = f"""
     <div style="font-family: Arial, sans-serif; background:#f7f7fb; padding:24px;">
@@ -49,8 +49,8 @@ def send_otp_email(to_email: str, otp: str, subject: str = "Your verification OT
         message = Mail(
             from_email=from_email,
             to_emails=to_email,
-            subject=subject,
-            plain_text_content=plain_body,
+            # subject=subject,
+            # plain_text_content=plain_body,
             html_content=html_content
         )
 
@@ -352,3 +352,4 @@ def feedback_summary(request):
         "per_class": per_class,
         "overall": overall,
     })
+
